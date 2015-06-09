@@ -16,7 +16,7 @@
 // ------------------------------------------------------------------
 
 var TableControls = React.createClass({
-    countChanged: function() {
+    countChanged: function () {
         var dropdownElement = document.getElementById("countDropdown");
         var selectedCount = dropdownElement.options[dropdownElement.selectedIndex].value;
         this.props.countChangeHandler(parseInt(selectedCount));
@@ -32,7 +32,7 @@ var TableControls = React.createClass({
                             <button className="btn" onClick={this.props.prevBtnEventHandler} >Prev</button>
                         </td>
                         <td>
-                            <span> Item(s) {startRange+1} to {endRange} of {this.props.totalNum} total contacts </span>
+                            <span> Item(s) {startRange + 1} to {endRange} of {this.props.totalNum} total contacts </span>
                             <select id="countDropdown"  onChange={this.countChanged}>
                                 <option value="5">5 Items</option>
                                 <option value="10">10 Items</option>
@@ -55,7 +55,7 @@ var TableControls = React.createClass({
 
 var InteractiveTable = React.createClass({
 
-    countChanged: function(newCount) {
+    countChanged: function (newCount) {
         this.loadDataFromServer(this.state.startIndex, newCount);
     },
     nextButtonClicked: function () {
@@ -94,19 +94,28 @@ var InteractiveTable = React.createClass({
     },
 
     loadDataFromServer: function (startIndex, count) {
-        DataProvider.getPeopleInfo(startIndex, startIndex+count).then(function (result) {
+        DataProvider.getPeopleInfo(startIndex, startIndex + count).then(function (result) {
 
             if (this.isMounted()) {
                 this.setState({
                     peopleData: result.currentPeople,
                     startIndex: startIndex,
                     count: count,
-                    totalNum: result.totalNum
+                    totalNum: result.totalNum,
+                    showError: false
                 });
             }
 
         }.bind(this), function (errMsg) {
-            //TODO: show some message to the user that the remote server didn't respond
+            if (this.isMounted()) {
+                this.setState({
+                    peopleData: [],
+                    startIndex: 0,
+                    count: count,
+                    totalNum: 0,
+                    showError: true
+                });
+            }
         }.bind(this));
 
     },
@@ -115,7 +124,8 @@ var InteractiveTable = React.createClass({
             peopleData: [],
             startIndex: 0,
             count: 5,
-            totalNum: 0
+            totalNum: 0,
+            showError: false
         };
     },
     componentDidMount: function () {
@@ -127,7 +137,7 @@ var InteractiveTable = React.createClass({
         this.state.peopleData.forEach(function (person) {
 
             var rowStyle = {
-                background: (counter%2 === 1)?'white':'lightskyblue'
+                background: (counter % 2 === 1) ? 'white' : 'lightskyblue'
             };
             counter++;
 
@@ -141,29 +151,33 @@ var InteractiveTable = React.createClass({
             </tr>);
         });
 
+
         return (
-            <div >
-                <TableControls totalNum={this.state.totalNum}
-                    startIndex={this.state.startIndex} count={this.state.count}
-                    nextBtnEventHandler={this.nextButtonClicked}
-                    prevBtnEventHandler={this.prevButtonClicked}
-                    countChangeHandler={this.countChanged}
-                />
-                <table className="address-table">
-                    <thead className="header-row">
-                        <tr>
-                            <td>First Name</td>
-                            <td>Last Name</td>
-                            <td>Street</td>
-                            <td>City</td>
-                            <td>State</td>
-                            <td>Zip Code</td>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div>
+                <div className={this.state.showError ? 'hidden-div' : ''}>
+                    <TableControls totalNum={this.state.totalNum}
+                        startIndex={this.state.startIndex} count={this.state.count}
+                        nextBtnEventHandler={this.nextButtonClicked}
+                        prevBtnEventHandler={this.prevButtonClicked}
+                        countChangeHandler={this.countChanged}
+                    />
+                    <table className="address-table">
+                        <thead className="header-row">
+                            <tr>
+                                <td>First Name</td>
+                                <td>Last Name</td>
+                                <td>Street</td>
+                                <td>City</td>
+                                <td>State</td>
+                                <td>Zip Code</td>
+                            </tr>
+                        </thead>
+                        <tbody>
                     {rows}
-                    </tbody>
-                </table >
+                        </tbody>
+                    </table >
+                </div>
+                { this.state.showError ? <label className="error">Oops! looks like the server is down.</label> : null }
             </div>
         );
 

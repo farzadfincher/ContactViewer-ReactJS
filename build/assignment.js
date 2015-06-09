@@ -1,6 +1,6 @@
 /**
  * Created by Farzad Sangi on 6/8/15.
- * the Distelli assignment: loads an array of objects where each object contains the following fields:
+ * A React component that shows an array of objects where each object contains the following fields:
  FirstName
  LastName
  Street
@@ -16,7 +16,7 @@
 // ------------------------------------------------------------------
 
 var TableControls = React.createClass({displayName: "TableControls",
-    countChanged: function() {
+    countChanged: function () {
         var dropdownElement = document.getElementById("countDropdown");
         var selectedCount = dropdownElement.options[dropdownElement.selectedIndex].value;
         this.props.countChangeHandler(parseInt(selectedCount));
@@ -32,7 +32,7 @@ var TableControls = React.createClass({displayName: "TableControls",
                             React.createElement("button", {className: "btn", onClick: this.props.prevBtnEventHandler}, "Prev")
                         ), 
                         React.createElement("td", null, 
-                            React.createElement("span", null, " Item(s) ", startRange+1, " to ", endRange, " of ", this.props.totalNum, " total contacts "), 
+                            React.createElement("span", null, " Item(s) ", startRange + 1, " to ", endRange, " of ", this.props.totalNum, " total contacts "), 
                             React.createElement("select", {id: "countDropdown", onChange: this.countChanged}, 
                                 React.createElement("option", {value: "5"}, "5 Items"), 
                                 React.createElement("option", {value: "10"}, "10 Items"), 
@@ -55,7 +55,7 @@ var TableControls = React.createClass({displayName: "TableControls",
 
 var InteractiveTable = React.createClass({displayName: "InteractiveTable",
 
-    countChanged: function(newCount) {
+    countChanged: function (newCount) {
         this.loadDataFromServer(this.state.startIndex, newCount);
     },
     nextButtonClicked: function () {
@@ -94,19 +94,28 @@ var InteractiveTable = React.createClass({displayName: "InteractiveTable",
     },
 
     loadDataFromServer: function (startIndex, count) {
-        DataProvider.getPeopleInfo(startIndex, startIndex+count).then(function (result) {
+        DataProvider.getPeopleInfo(startIndex, startIndex + count).then(function (result) {
 
             if (this.isMounted()) {
                 this.setState({
                     peopleData: result.currentPeople,
                     startIndex: startIndex,
                     count: count,
-                    totalNum: result.totalNum
+                    totalNum: result.totalNum,
+                    showError: false
                 });
             }
 
         }.bind(this), function (errMsg) {
-            //TODO: show some message to the user that the remote server didn't respond
+            if (this.isMounted()) {
+                this.setState({
+                    peopleData: [],
+                    startIndex: 0,
+                    count: count,
+                    totalNum: 0,
+                    showError: true
+                });
+            }
         }.bind(this));
 
     },
@@ -115,7 +124,8 @@ var InteractiveTable = React.createClass({displayName: "InteractiveTable",
             peopleData: [],
             startIndex: 0,
             count: 5,
-            totalNum: 0
+            totalNum: 0,
+            showError: false
         };
     },
     componentDidMount: function () {
@@ -127,7 +137,7 @@ var InteractiveTable = React.createClass({displayName: "InteractiveTable",
         this.state.peopleData.forEach(function (person) {
 
             var rowStyle = {
-                background: (counter%2 === 1)?'white':'lightskyblue'
+                background: (counter % 2 === 1) ? 'white' : 'lightskyblue'
             };
             counter++;
 
@@ -141,29 +151,33 @@ var InteractiveTable = React.createClass({displayName: "InteractiveTable",
             ));
         });
 
+
         return (
             React.createElement("div", null, 
-                React.createElement(TableControls, {totalNum: this.state.totalNum, 
-                    startIndex: this.state.startIndex, count: this.state.count, 
-                    nextBtnEventHandler: this.nextButtonClicked, 
-                    prevBtnEventHandler: this.prevButtonClicked, 
-                    countChangeHandler: this.countChanged}
-                ), 
-                React.createElement("table", {className: "address-table"}, 
-                    React.createElement("thead", {className: "header-row"}, 
-                        React.createElement("tr", null, 
-                            React.createElement("td", null, "First Name"), 
-                            React.createElement("td", null, "Last Name"), 
-                            React.createElement("td", null, "Street"), 
-                            React.createElement("td", null, "City"), 
-                            React.createElement("td", null, "State"), 
-                            React.createElement("td", null, "Zip Code")
-                        )
+                React.createElement("div", {className: this.state.showError ? 'hidden-div' : ''}, 
+                    React.createElement(TableControls, {totalNum: this.state.totalNum, 
+                        startIndex: this.state.startIndex, count: this.state.count, 
+                        nextBtnEventHandler: this.nextButtonClicked, 
+                        prevBtnEventHandler: this.prevButtonClicked, 
+                        countChangeHandler: this.countChanged}
                     ), 
-                    React.createElement("tbody", null, 
+                    React.createElement("table", {className: "address-table"}, 
+                        React.createElement("thead", {className: "header-row"}, 
+                            React.createElement("tr", null, 
+                                React.createElement("td", null, "First Name"), 
+                                React.createElement("td", null, "Last Name"), 
+                                React.createElement("td", null, "Street"), 
+                                React.createElement("td", null, "City"), 
+                                React.createElement("td", null, "State"), 
+                                React.createElement("td", null, "Zip Code")
+                            )
+                        ), 
+                        React.createElement("tbody", null, 
                     rows
+                        )
                     )
-                )
+                ), 
+                 this.state.showError ? React.createElement("label", {className: "error"}, "Oops! looks like the server is down.") : null
             )
         );
 
