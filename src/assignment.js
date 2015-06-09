@@ -1,6 +1,6 @@
 /**
  * Created by Farzad Sangi on 6/8/15.
- * the Distelli assignment: loads an array of objects where each object contains the following fields:
+ * A React component that shows an array of objects where each object contains the following fields:
  FirstName
  LastName
  Street
